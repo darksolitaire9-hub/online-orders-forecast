@@ -213,3 +213,12 @@ __marimo__/
 *.xlsm
 *.xlsb
 *.csv
+
+
+# Config
+config.local.yml
+*.local.yml
+
+# Data files
+data/
+private_data/
