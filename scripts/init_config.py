@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
 import textwrap
+from pathlib import Path
+from tkinter import Tk, filedialog
 from typing import List
 
 import yaml  # requires `uv add pyyaml`
-from tkinter import Tk, filedialog
 
 CONFIG_PATH = Path("config.local.yml")
 
@@ -99,7 +99,7 @@ def main() -> None:
 
     # 2) Opening date or "unsure"
     unsure_opening = ask_yes_no(
-        "Are you unsure about the exact store opening date?",
+        "Do you know the exact store opening date?",
         default=True,
     )
     if unsure_opening:
@@ -141,7 +141,9 @@ def main() -> None:
     }
 
     cfg = {
-        "store_id": ask("Store ID (for example: cx or example_store)", default="example_store"),
+        "store_id": ask(
+            "Store ID (for example: cx or example_store)", default="example_store"
+        ),
         "opening_date": opening_date,
         "forecast": {
             "first_forecast_month": primary_month,
