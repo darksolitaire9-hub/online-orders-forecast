@@ -10,26 +10,51 @@ from restaurant_forecast.domain.models import (
 
 
 def test_daily_observation_basic():
-    obs = DailyObservation(date=date(2025, 10, 19), value=10.0)
+    obs = DailyObservation(
+        date=date(2025, 10, 19),
+        sales=100.0,
+        orders=10,
+        ticket_size=10.0,
+    )
 
     assert obs.date == date(2025, 10, 19)
-    assert obs.value == 10.0
+    assert obs.sales == 100.0
+    assert obs.orders == 10
+    assert obs.ticket_size == 10.0
 
 
 def test_daily_series_basic():
     obs = [
-        DailyObservation(date=date(2025, 10, 19), value=10.0),
-        DailyObservation(date=date(2025, 10, 20), value=12.0),
+        DailyObservation(
+            date=date(2025, 10, 19),
+            sales=100.0,
+            orders=10,
+            ticket_size=10.0,
+        ),
+        DailyObservation(
+            date=date(2025, 10, 20),
+            sales=120.0,
+            orders=12,
+            ticket_size=10.0,
+        ),
     ]
 
     series = DailySeries(store_id="cx", observations=obs)
 
     assert series.store_id == "cx"
     assert len(series.observations) == 2
-    assert series.observations[0].date == date(2025, 10, 19)
-    assert series.observations[0].value == 10.0
-    assert series.observations[1].date == date(2025, 10, 20)
-    assert series.observations[1].value == 12.0
+
+    first = series.observations[0]
+    assert first.date == date(2025, 10, 19)
+    assert first.sales == 100.0
+    assert first.orders == 10
+    assert first.ticket_size == 10.0
+
+    second = series.observations[1]
+    assert second.date == date(2025, 10, 20)
+    assert second.sales == 120.0
+    assert second.orders == 12
+    assert second.ticket_size == 10.0
 
 
 def test_monthly_backtest_config_basic():
@@ -44,19 +69,33 @@ def test_monthly_backtest_config_basic():
     assert cfg.train_end == date(2025, 10, 31)
     assert cfg.forecast_year == 2025
     assert cfg.forecast_month == 11
+    assert cfg.require_full_target is True
 
 
 def test_daily_forecast_basic():
-    f = DailyForecast(date=date(2025, 11, 1), predicted=15.5)
+    f = DailyForecast(
+        date=date(2025, 11, 1),
+        predicted_orders=15.5,
+        predicted_sales=155.0,
+    )
 
     assert f.date == date(2025, 11, 1)
-    assert f.predicted == 15.5
+    assert f.predicted_orders == 15.5
+    assert f.predicted_sales == 155.0
 
 
 def test_monthly_forecast_basic():
     daily = [
-        DailyForecast(date=date(2025, 11, 1), predicted=15.0),
-        DailyForecast(date=date(2025, 11, 2), predicted=16.0),
+        DailyForecast(
+            date=date(2025, 11, 1),
+            predicted_orders=15.0,
+            predicted_sales=150.0,
+        ),
+        DailyForecast(
+            date=date(2025, 11, 2),
+            predicted_orders=16.0,
+            predicted_sales=160.0,
+        ),
     ]
 
     mf = MonthlyForecast(
@@ -70,7 +109,13 @@ def test_monthly_forecast_basic():
     assert mf.year == 2025
     assert mf.month == 11
     assert len(mf.forecasts) == 2
-    assert mf.forecasts[0].date == date(2025, 11, 1)
-    assert mf.forecasts[0].predicted == 15.0
-    assert mf.forecasts[1].date == date(2025, 11, 2)
-    assert mf.forecasts[1].predicted == 16.0
+
+    first = mf.forecasts[0]
+    assert first.date == date(2025, 11, 1)
+    assert first.predicted_orders == 15.0
+    assert first.predicted_sales == 150.0
+
+    second = mf.forecasts[1]
+    assert second.date == date(2025, 11, 2)
+    assert second.predicted_orders == 16.0
+    assert second.predicted_sales == 160.0
