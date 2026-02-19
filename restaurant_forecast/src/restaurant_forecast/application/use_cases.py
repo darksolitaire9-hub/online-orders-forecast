@@ -1,75 +1,22 @@
-
-"""
-
-Use cases for running forecasts and backtests.
-
-Wire up DataLoader and Forecaster ports here.
-
-"""
+from __future__ import annotations
 
 from dataclasses import dataclass
 
-from datetime import date
-
-
-
-from restaurant_forecast.ports.data_loader import DataLoader
-
-from restaurant_forecast.ports.forecaster import Forecaster
-
-
-
+from restaurant_forecast.application.ports.data_loader import IDataLoader
+from restaurant_forecast.domain.models import DailySeries
 
 
 @dataclass
-
-class BacktestConfig:
-
+class LoadHistoryCommand:
     store_id: str
 
-    start_date: date
 
-    end_date: date
+class LoadHistoryUseCase:
+    """Simple application use case: load cleaned history for a store."""
 
-    forecast_month: int
+    def __init__(self, loader: IDataLoader) -> None:
+        self._loader = loader
 
-    forecast_year: int
-
-
-
-
-
-def run_monthly_backtest(
-
-    config: BacktestConfig,
-
-    data_loader: DataLoader,
-
-    forecaster: Forecaster,
-
-):
-
-    series = data_loader.load_series(
-
-        store_id=config.store_id,
-
-        start_date=config.start_date,
-
-        end_date=config.end_date,
-
-    )
-
-    model = forecaster.fit(series)
-
-    forecasts = forecaster.forecast_month(
-
-        model=model,
-
-        year=config.forecast_year,
-
-        month=config.forecast_month,
-
-    )
-
-    return forecasts
-
+    def execute(self, cmd: LoadHistoryCommand) -> DailySeries:
+        # Application talks to the port, not to CSV directly.
+        return self._loader.load_history(cmd.store_id)
