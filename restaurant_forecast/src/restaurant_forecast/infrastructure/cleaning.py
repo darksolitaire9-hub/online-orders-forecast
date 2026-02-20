@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 from typing import Final, cast
 
 import pandas as pd
 
-# Column names for the Uber Eats daily export
+# Column names for the  daily export
 DATE_COL: Final[str] = "Start Date"
 END_DATE_COL: Final[str] = "End Date"
 SALES_COL: Final[str] = "Sales"
@@ -11,9 +12,9 @@ ORDERS_COL: Final[str] = "Orders"
 TICKET_COL: Final[str] = "Ticket Size"
 
 
-def clean_ubereats_daily(raw: pd.DataFrame) -> pd.DataFrame:
+def clean_daily(raw: pd.DataFrame) -> pd.DataFrame:
     """
-    Clean a raw Uber Eats daily export DataFrame.
+    Clean a raw daily export DataFrame.
 
     Input expectations (raw):
       - DATE_COL and END_DATE_COL: string-like date/time columns
@@ -59,11 +60,7 @@ def clean_ubereats_daily(raw: pd.DataFrame) -> pd.DataFrame:
 
     # Remove obviously bad rows (negative values)
     before = len(df)
-    df = df[
-        (df[SALES_COL] >= 0)
-        & (df[ORDERS_COL] >= 0)
-        & (df[TICKET_COL] >= 0)
-    ]
+    df = df[(df[SALES_COL] >= 0) & (df[ORDERS_COL] >= 0) & (df[TICKET_COL] >= 0)]
     print(f"[clean] dropped {before - len(df)} rows with negative values")
 
     # Keep zero days, just sort by date
