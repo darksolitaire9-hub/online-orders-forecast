@@ -15,7 +15,7 @@ from restaurant_forecast.infrastructure.cleaning import (
     SALES_COL,
     ORDERS_COL,
     TICKET_COL,
-    clean_ubereats_daily,
+    clean_daily,
 )
 
 
@@ -39,7 +39,7 @@ class CSVDataLoader(IDataLoader):
     """
     Infrastructure adapter that:
       - reads multiple monthly CSV files,
-      - cleans/normalizes them using clean_ubereats_daily,
+      - cleans/normalizes them using clean_daily,
       - converts the result into domain DailySeries.
 
     It also exposes load_all_raw_dataframe() for debugging.
@@ -73,12 +73,12 @@ class CSVDataLoader(IDataLoader):
 
         This is the internal boundary where:
           - I/O (CSV reading) and
-          - cleaning (clean_ubereats_daily)
+          - cleaning (clean_daily)
         are composed.
         """
         frames = self._load_raw_frames()
         raw_df = pd.concat(frames, ignore_index=True)
-        cleaned = clean_ubereats_daily(raw_df)
+        cleaned = clean_daily(raw_df)
         return cleaned
 
     # ---------- DataFrame -> domain ---------- #
