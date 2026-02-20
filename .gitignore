@@ -222,3 +222,7 @@ config.local.yml
 # Data files
 data/
 private_data/
+
+
+# Ignore all exploratory notebooks
+*.ipynb
