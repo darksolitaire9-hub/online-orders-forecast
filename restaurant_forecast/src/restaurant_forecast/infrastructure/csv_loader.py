@@ -17,6 +17,10 @@ from restaurant_forecast.infrastructure.cleaning import (
     TICKET_COL,
     clean_daily,
 )
+from restaurant_forecast.infrastructure.schema import (
+    CoreSchemaDataFrame,
+    select_core_columns,
+)
 
 
 @dataclass
@@ -40,6 +44,7 @@ class CSVDataLoader(IDataLoader):
     Infrastructure adapter that:
       - reads multiple monthly CSV files,
       - cleans/normalizes them using clean_daily,
+      - normalizes to the core schema via select_core_columns,
       - converts the result into domain DailySeries.
 
     It also exposes load_all_raw_dataframe() for debugging.
@@ -81,15 +86,23 @@ class CSVDataLoader(IDataLoader):
         cleaned = clean_daily(raw_df)
         return cleaned
 
+    def _read_core(self) -> CoreSchemaDataFrame:
+        """
+        Read, clean, and normalize CSV data into the core schema
+        (Start Date, Sales, Orders, Ticket Size).
+        """
+        cleaned = self._read_all_raw()
+        return select_core_columns(cleaned)
+
     # ---------- DataFrame -> domain ---------- #
 
     @staticmethod
-    def _iter_observations(df: pd.DataFrame) -> Iterable[DailyObservation]:
+    def _iter_observations(df: CoreSchemaDataFrame) -> Iterable[DailyObservation]:
         """
-        Convert a cleaned DataFrame row-by-row into DailyObservation objects.
+        Convert a core-schema DataFrame row-by-row into DailyObservation objects.
 
         Precondition:
-          - df has already been processed by clean_ubereats_daily,
+          - df has already been processed by clean_daily and select_core_columns,
             so column types and invariants described there hold.
         """
         for _, row in df.iterrows():
@@ -105,7 +118,7 @@ class CSVDataLoader(IDataLoader):
                 ticket_size=ticket,
             )
 
-    def _to_daily_series(self, df: pd.DataFrame) -> DailySeries:
+    def _to_daily_series(self, df: CoreSchemaDataFrame) -> DailySeries:
         observations = list(self._iter_observations(df))
         return DailySeries(store_id=self._config.store_id, observations=observations)
 
@@ -118,8 +131,8 @@ class CSVDataLoader(IDataLoader):
         The store_id argument is currently ignored; CSVConfig.store_id is used
         as the identifier in the resulting DailySeries.
         """
-        df = self._read_all_raw()
-        return self._to_daily_series(df)
+        df_core = self._read_core()
+        return self._to_daily_series(df_core)
 
     def load_range(
         self,
@@ -132,9 +145,9 @@ class CSVDataLoader(IDataLoader):
 
         Dates are inclusive and are compared at date precision (no time-of-day).
         """
-        df = self._read_all_raw()
-        mask = (df[DATE_COL] >= start) & (df[END_DATE_COL] <= end)
-        sliced = df.loc[mask]
+        df_core = self._read_core()
+        mask = (df_core[DATE_COL] >= start) & (df_core[DATE_COL] <= end)
+        sliced = df_core.loc[mask]
         return self._to_daily_series(sliced)
 
     # ---------- debug API ---------- #
